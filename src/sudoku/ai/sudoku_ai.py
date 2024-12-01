@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def find_empty_cell_with_fewest_possibilities(board, possibilities):
     """Find the empty cell with the fewest possibilities."""
     min_options = 10
@@ -8,13 +9,14 @@ def find_empty_cell_with_fewest_possibilities(board, possibilities):
         for col in range(9):
             if board[row, col] == 0:
                 bits = possibilities[row, col]
-                options = bin(bits).count('1')
+                options = bin(bits).count("1")
                 if options < min_options:
                     min_options = options
                     min_cell = (row, col)
                     if min_options == 1:
                         return min_cell
     return min_cell
+
 
 class SudokuAI:
     """Advanced AI solver that uses logical strategies and optimizations."""
@@ -43,31 +45,42 @@ class SudokuAI:
             for row in range(9):
                 for col in range(9):
                     if self.board[row, col] == 0:
-                        self.possibilities[row, col] = self.compute_cell_possibilities(row, col)
+                        self.possibilities[row, col] = self.compute_cell_possibilities(
+                            row, col
+                        )
                     else:
                         self.possibilities[row, col] = 0
         else:
             for row, col in affected_cells:
                 if self.board[row, col] == 0:
-                    self.possibilities[row, col] = self.compute_cell_possibilities(row, col)
+                    self.possibilities[row, col] = self.compute_cell_possibilities(
+                        row, col
+                    )
                 else:
                     self.possibilities[row, col] = 0
+
     def compute_cell_possibilities(self, row, col):
         used = np.zeros(10, dtype=bool)
         used[self.board[row, :]] = True
         used[self.board[:, col]] = True
-        box = self.board[row//3*3:(row//3+1)*3, col//3*3:(col//3+1)*3]
+        box = self.board[
+            row // 3 * 3 : (row // 3 + 1) * 3, col // 3 * 3 : (col // 3 + 1) * 3
+        ]
         used[box.flatten()] = True
         return sum(1 << (i - 1) for i in range(1, 10) if not used[i])
+
     def naked_singles(self):
         """Fill in cells where there's only one possible number."""
         progress = False
-        singles = np.argwhere((self.possibilities != 0) & ((self.possibilities & (self.possibilities - 1)) == 0))
+        singles = np.argwhere(
+            (self.possibilities != 0)
+            & ((self.possibilities & (self.possibilities - 1)) == 0)
+        )
         for row, col in singles:
             bits = int(self.possibilities[row, col])
             num = bits.bit_length()
             self.board[row, col] = num
-            self.steps.append((row, col, num, 'Naked Single'))
+            self.steps.append((row, col, num, "Naked Single"))
             affected_cells = self.get_affected_cells(row, col)
             self.update_possibilities(affected_cells)
             progress = True
@@ -88,7 +101,7 @@ class SudokuAI:
                 if len(positions) == 1:
                     row, col = positions[0]
                     self.board[row, col] = num
-                    self.steps.append((row, col, num, 'Hidden Single in Row'))
+                    self.steps.append((row, col, num, "Hidden Single in Row"))
                     affected_cells = self.get_affected_cells(row, col)
                     self.update_possibilities(affected_cells)
                     progress = True
@@ -104,7 +117,7 @@ class SudokuAI:
                 if len(positions) == 1:
                     row, col = positions[0]
                     self.board[row, col] = num
-                    self.steps.append((row, col, num, 'Hidden Single in Column'))
+                    self.steps.append((row, col, num, "Hidden Single in Column"))
                     affected_cells = self.get_affected_cells(row, col)
                     self.update_possibilities(affected_cells)
                     progress = True
@@ -123,7 +136,7 @@ class SudokuAI:
                 if len(positions) == 1:
                     row, col = positions[0]
                     self.board[row, col] = num
-                    self.steps.append((row, col, num, 'Hidden Single in Box'))
+                    self.steps.append((row, col, num, "Hidden Single in Box"))
                     affected_cells = self.get_affected_cells(row, col)
                     self.update_possibilities(affected_cells)
                     progress = True
@@ -135,7 +148,9 @@ class SudokuAI:
         affected_cells.update({(row, i) for i in range(9)})
         affected_cells.update({(i, col) for i in range(9)})
         start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-        affected_cells.update({(start_row + i, start_col + j) for i in range(3) for j in range(3)})
+        affected_cells.update(
+            {(start_row + i, start_col + j) for i in range(3) for j in range(3)}
+        )
         return affected_cells
 
     def is_solved(self):
@@ -156,7 +171,7 @@ class SudokuAI:
 
         for num in nums:
             self.board[row, col] = num
-            self.steps.append((row, col, num, 'Backtracking with MRV'))
+            self.steps.append((row, col, num, "Backtracking with MRV"))
             affected_cells = self.get_affected_cells(row, col)
             self.update_possibilities(affected_cells)
             if self.backtrack_solve():
