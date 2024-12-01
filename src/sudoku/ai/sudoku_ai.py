@@ -1,5 +1,4 @@
 import numpy as np
-from sudoku_core import is_valid
 
 def find_empty_cell_with_fewest_possibilities(board, possibilities):
     """Find the empty cell with the fewest possibilities."""
@@ -53,15 +52,13 @@ class SudokuAI:
                     self.possibilities[row, col] = self.compute_cell_possibilities(row, col)
                 else:
                     self.possibilities[row, col] = 0
-
     def compute_cell_possibilities(self, row, col):
-        """Compute possibilities for a single cell."""
-        used_numbers = set(self.board[row, :]) | set(self.board[:, col]) | set(
-            self.board[row//3*3:(row//3+1)*3, col//3*3:(col//3+1)*3].flatten()
-        )
-        mask = sum(1 << (num - 1) for num in used_numbers if num != 0)
-        mask &= 0x1FF  # Ensure mask is within 9 bits
-        return (((1 << 9) - 1) & ~mask) & 0xFF
+        used = np.zeros(10, dtype=bool)
+        used[self.board[row, :]] = True
+        used[self.board[:, col]] = True
+        box = self.board[row//3*3:(row//3+1)*3, col//3*3:(col//3+1)*3]
+        used[box.flatten()] = True
+        return sum(1 << (i - 1) for i in range(1, 10) if not used[i])
     def naked_singles(self):
         """Fill in cells where there's only one possible number."""
         progress = False

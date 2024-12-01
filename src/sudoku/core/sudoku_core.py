@@ -34,11 +34,24 @@ def solve_sudoku(board, numbers=None):
     return False
 
 def count_solutions(board, limit=2):
-    """Count the number of solutions for the Sudoku board up to a limit."""
     count = [0]
-    _count_solutions_helper(board, limit, count)
+    def _count_solutions_helper(board):
+        if count[0] >= limit:
+            return
+        empty = find_empty_cell(board)
+        if not empty:
+            count[0] += 1
+            return
+        row, col = empty
+        for num in range(1, 10):
+            if is_valid(board, row, col, num):
+                board[row, col] = num
+                _count_solutions_helper(board)
+                if count[0] >= limit:
+                    return
+                board[row, col] = 0
+    _count_solutions_helper(board.copy())
     return count[0]
-
 def _count_solutions_helper(board, limit, count):
     """Helper function to count solutions with a limit."""
     if count[0] >= limit:
@@ -85,29 +98,26 @@ def find_conflicts(board):
     return conflicts
 
 def generate_puzzle(difficulty='Medium'):
-    """Generate a random Sudoku puzzle with a unique solution."""
     board = np.zeros((9, 9), dtype=np.uint8)
-    numbers = list(range(1, 10))
-    random.shuffle(numbers)
-    solve_sudoku(board, numbers)  # Generate a random complete solution
-
-    # Determine number of cells to remove based on difficulty
-    difficulty_levels = {'Easy': 40, 'Medium': 50, 'Hard': 60}
-    cells_to_remove = difficulty_levels.get(difficulty, 50)
-
-    filled_positions = [(r, c) for r in range(9) for c in range(9)]
-    random.shuffle(filled_positions)
-
-    while cells_to_remove > 0 and filled_positions:
-        row, col = filled_positions.pop()
-        backup = board[row, col]
+    numbers = np.random.permutation(9) + 1
+    
+    # Fill diagonal boxes first
+    for i in range(0, 9, 3):
+        box = numbers.reshape(3, 3)
+        board[i:i+3, i:i+3] = box
+        np.random.shuffle(numbers)
+    
+    solve_sudoku(board)  # Fill the rest
+    
+    cells_to_remove = {'Easy': 40, 'Medium': 50, 'Hard': 60}[difficulty]
+    positions = np.random.permutation(81)
+    
+    for pos in positions[:cells_to_remove]:
+        row, col = pos // 9, pos % 9
+        temp = board[row, col]
         board[row, col] = 0
-
-        # Make a copy of the board to test for uniqueness
-        board_copy = board.copy()
-        solution_count = count_solutions(board_copy, limit=2)
-        if solution_count != 1:
-            board[row, col] = backup
-        else:
-            cells_to_remove -= 1
+        
+        if count_solutions(board.copy()) != 1:
+            board[row, col] = temp
+            
     return board

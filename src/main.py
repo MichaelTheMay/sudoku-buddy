@@ -1,5 +1,5 @@
 import tkinter as tk
-from sudoku_gui import SudokuGUI
+from sudoku.gui import SudokuGUI
 
 def main():
     root = tk.Tk()
